@@ -52,13 +52,21 @@ public class MyGame extends BaseGame implements MouseListener
 		initGameObjects();
 		IInputManager im = getInputManager();
 		String gpName = im.getFirstGamepadName();
+		String kbName = im.getKeyboardName();
 		
 		SetSpeedAction setSpeed = new SetSpeedAction();
 		ForwardAction mvForward = new ForwardAction(camera, 0.01f);
+		
 		im.associateAction(gpName,
 				net.java.games.input.Component.Identifier.Axis.Y,
 				mvForward,
 				IInputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
+		
+		im.associateAction(kbName, 
+				net.java.games.input.Component.Identifier.Key.W, 
+				mvForward,
+				IInputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
+		
 		im.associateAction(gpName,
 				net.java.games.input.Component.Identifier.Button._3,
 				setSpeed,
