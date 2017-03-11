@@ -67,7 +67,7 @@ public class MyGame extends BaseGame implements MouseListener
 	MyPlant plant;
 	
 	int numCrashes=0;
-	private static boolean behindAvatar=true;
+	private static boolean behindAvatar=false;
 	
 	
 	//initGame() is called once at startup by BaseGame.start()
@@ -103,7 +103,7 @@ public class MyGame extends BaseGame implements MouseListener
 		kbName = im.getKeyboardName();
 		mouseName = im.getMouseName();
 		
-		cc1 = new Camera3Pcontroller(camera1, player1, im, mouseName);
+		cc1 = new Camera3Pcontroller(camera1, player1, im, kbName);
 		cc2 = new Camera3Pcontroller(camera2, player2, im, gpName);
 		
 		IAction quitGame = new QuitGameAction(this);
@@ -264,8 +264,8 @@ public class MyGame extends BaseGame implements MouseListener
 		 */
 		 
 		 ground = new Cube("GROUND");
-		 ground.translate(0, 0, 0);
-		 ground.scale(100, 0,  100);
+		 ground.translate(0, -1, 0);
+		 ground.scale(100, 1,  100);
 		 addGameWorldObject(ground);
 		 
 		 player1 = new Pyramid("PLAYER1");
@@ -304,7 +304,7 @@ public class MyGame extends BaseGame implements MouseListener
 			 addGameWorldObject(plant);
 			 eventMgr.addListener(plant,  CrashEvent.class);
 			 plants.addChild(plant);
-			 System.out.println(plants.getNumberOfChildren());
+			 //System.out.println(plants.getNumberOfChildren());
 		 }
 		 
 		 
@@ -326,14 +326,14 @@ public class MyGame extends BaseGame implements MouseListener
 	private void createPlayerHUDs() {
 		 HUDString player1ID = new HUDString("Player1");
 		 player1ID.setName("Player1ID");
-		 player1ID.setLocation(0.01, 0.06);
+		 player1ID.setLocation(0.01, .8);
 		 player1ID.setRenderMode(sage.scene.SceneNode.RENDER_MODE.ORTHO);
 		 player1ID.setColor(Color.red);
 		 player1ID.setCullMode(sage.scene.SceneNode.CULL_MODE.NEVER);
 		 camera1.addToHUD(player1ID);
 		 HUDString player2ID = new HUDString("Player2");
 		 player2ID.setName("Player2ID");
-		 player2ID.setLocation(0.01, 0.06);
+		 player2ID.setLocation(0.01, .8);
 		 player2ID.setRenderMode(sage.scene.SceneNode.RENDER_MODE.ORTHO);
 		 player2ID.setColor(Color.yellow);
 		 player2ID.setCullMode(sage.scene.SceneNode.CULL_MODE.NEVER);

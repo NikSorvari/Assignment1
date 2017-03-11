@@ -34,10 +34,14 @@ public class Camera3Pcontroller {
 	 }
 	private void setupInput(IInputManager im, String cn) {
 		 IAction orbitAction = new OrbitAroundAction();
+		 IAction orbitRightAction = new OrbitRightAction();
+		 IAction orbitLeftAction = new OrbitLeftAction();
 		 IAction zoomOut1 = new ZoomOutAction();
 		 IAction zoomIn1 = new ZoomInAction();
 		 IAction zoomOut2 = new ZoomOutAction();
 		 im.associateAction(cn, Axis.RX, orbitAction, IInputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
+		 im.associateAction(cn, net.java.games.input.Component.Identifier.Key.RIGHT, orbitRightAction, IInputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
+		 im.associateAction(cn, net.java.games.input.Component.Identifier.Key.LEFT, orbitLeftAction, IInputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
 		 
 		 im.associateAction(cn, Axis.RY, zoomOut2, IInputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
 		 im.associateAction(cn, net.java.games.input.Component.Identifier.Key.UP, zoomOut1, IInputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
@@ -83,6 +87,49 @@ public class Camera3Pcontroller {
 
 		}
 	}
+	
+	public class OrbitRightAction extends AbstractInputAction {
+
+		@Override
+		public void performAction(float time, Event evt) {
+			 float rotAmount=0;
+			 if (MyGame.getBehindAvatar()==false)
+			 {
+				 { rotAmount=0.1f; }
+
+			 }
+			else
+			{
+				cameraAzimuth = (float) target.getWorldRotation().elementAt(0,1);
+			}
+				 
+		cameraAzimuth -= rotAmount ;
+		cameraAzimuth = cameraAzimuth % 360 ;
+
+		}
+	}
+	
+	public class OrbitLeftAction extends AbstractInputAction {
+
+		@Override
+		public void performAction(float time, Event evt) {
+			 float rotAmount=0;
+			 if (MyGame.getBehindAvatar()==false)
+			 {
+				 { rotAmount=-0.1f; }
+
+			 }
+			else
+			{
+				cameraAzimuth = (float) target.getWorldRotation().elementAt(0,1);
+			}
+				 
+		cameraAzimuth -= rotAmount ;
+		cameraAzimuth = cameraAzimuth % 360 ;
+
+		}
+	}
+	
 	
 	public class ZoomOutAction extends AbstractInputAction
 	{
