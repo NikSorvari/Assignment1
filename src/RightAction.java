@@ -4,12 +4,11 @@ import net.java.games.input.Event;
 import sage.camera.ICamera;
 import sage.input.action.AbstractInputAction;
 
-public class ForwardAction extends AbstractInputAction {
-	private ICamera camera;
-	
+public class RightAction extends AbstractInputAction {
+	 private ICamera camera;
 	 private float speed;
 	 
-	 public ForwardAction(ICamera c, float s)
+	 public RightAction(ICamera c, float s)
 	 { 
 		 camera = c;
 		 speed = s;
@@ -20,7 +19,14 @@ public class ForwardAction extends AbstractInputAction {
 		 Vector3D viewDir = camera.getViewDirection().normalize();
 		 Vector3D curLocVector = new Vector3D(camera.getLocation());
 		 
-		 newLocVector = curLocVector.add(viewDir.mult(speed * time));
+		 
+		 
+		 if (e.getValue() < -0.2)
+		 { newLocVector = curLocVector.minus(camera.getRightAxis().mult(speed * time)); }
+		 else { if (e.getValue() > 0.2)
+		 { newLocVector = curLocVector.add(camera.getRightAxis().mult(speed * time)); }
+		 else { newLocVector = curLocVector; }
+		 }
 		 
 		 //create a point for the new location
 		 double newX = newLocVector.getX();

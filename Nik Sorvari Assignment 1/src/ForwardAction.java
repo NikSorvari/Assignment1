@@ -5,8 +5,7 @@ import sage.camera.ICamera;
 import sage.input.action.AbstractInputAction;
 
 public class ForwardAction extends AbstractInputAction {
-	private ICamera camera;
-	
+	 private ICamera camera;
 	 private float speed;
 	 
 	 public ForwardAction(ICamera c, float s)

@@ -4,12 +4,11 @@ import net.java.games.input.Event;
 import sage.camera.ICamera;
 import sage.input.action.AbstractInputAction;
 
-public class ForwardAction extends AbstractInputAction {
-	private ICamera camera;
-	
+public class BackwardAction extends AbstractInputAction {
+	 private ICamera camera;
 	 private float speed;
 	 
-	 public ForwardAction(ICamera c, float s)
+	 public BackwardAction(ICamera c, float s)
 	 { 
 		 camera = c;
 		 speed = s;
@@ -20,7 +19,17 @@ public class ForwardAction extends AbstractInputAction {
 		 Vector3D viewDir = camera.getViewDirection().normalize();
 		 Vector3D curLocVector = new Vector3D(camera.getLocation());
 		 
-		 newLocVector = curLocVector.add(viewDir.mult(speed * time));
+		//conditions for gamepad axis in both directions
+		//keyboard S always goes back
+		 
+		 
+		 if (e.getValue() < -0.2)
+		 { newLocVector = curLocVector.add(viewDir.mult(speed * time)); }
+		 else { if (e.getValue() > 0.2)
+		 { newLocVector = curLocVector.minus(viewDir.mult(speed * time)); }
+		 else { newLocVector = curLocVector; }
+		 }
+		 
 		 
 		 //create a point for the new location
 		 double newX = newLocVector.getX();
