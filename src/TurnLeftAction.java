@@ -4,11 +4,11 @@ import net.java.games.input.Event;
 import sage.input.action.AbstractInputAction;
 import sage.scene.SceneNode;
 
-public class TurnRightAction extends AbstractInputAction {
+public class TurnLeftAction extends AbstractInputAction {
 	 private SceneNode avatar;
 	 private float speed = 0.1f; // it would be better to use axis value
 	 
-	 public TurnRightAction(SceneNode n) { avatar = n; }
+	 public TurnLeftAction(SceneNode n) { avatar = n; }
 	 
 	 public void performAction(float time, Event e)
 	 {
@@ -17,15 +17,10 @@ public class TurnRightAction extends AbstractInputAction {
 		 
 		 if (MyGame.getBehindAvatar()==true)
 		 {
-			 if (e.getValue() < -0.2)
 			 { dir = speed; }
-			 else { if (e.getValue() > 0.2)
-			 { dir = -speed; }
-			 else { dir = 0; }
-			 }
+			 
 			 
 			 avatar.rotate(dir*time, new Vector3D(0,1,0));
-			 
 		 }
 		 else
 		 {

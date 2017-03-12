@@ -10,3 +10,10 @@
 /ZoomOutAction.class
 /Camera3Pcontroller$ZoomOutAction.class
 /Camera3Pcontroller$ZoomInAction.class
+/Camera3Pcontroller$OrbitLeftAction.class
+/Camera3Pcontroller$OrbitRightAction.class
+/TurnLeftAction.class
+/MyGame$toggleCamType.class
+/GrowController.class
+/RotationController.class
+/MyTranslateController.class
