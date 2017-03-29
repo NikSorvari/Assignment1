@@ -30,11 +30,14 @@ import sage.renderer.IRenderer;
 import sage.scene.Group;
 import sage.scene.HUDString;
 import sage.scene.SceneNode;
+import sage.scene.SkyBox;
 import sage.scene.shape.Cube;
 import sage.scene.shape.Line;
 import sage.scene.shape.Pyramid;
 import sage.scene.shape.Rectangle;
 import sage.scene.shape.Teapot;
+import sage.texture.Texture;
+import sage.texture.TextureManager;
 import sage.scene.TriMesh;
 import sage.display.DisplaySystem;
 import sage.event.EventManager;
@@ -59,10 +62,12 @@ public class MyGame extends BaseGame implements MouseListener
 	String kbName;
 	String mouseName;
 	
+	SkyBox skybox;
 	Cube ground;
 	private static SceneNode player1;
 	private static SceneNode player2;
 	Pyramid aPyr;
+	
 	MyTruck truck;
 	private static Matrix3D trucm;
 	protected Group rootNode;
@@ -93,10 +98,14 @@ public class MyGame extends BaseGame implements MouseListener
 		
 		//configure game display
 		
-		display.setTitle("Space Farming 3D");
+		display.setTitle("Water Blasters 3D");
 		display.addMouseListener(this);
 		super.update(0);
 	}
+
+
+
+
 
 
 
@@ -137,17 +146,6 @@ public class MyGame extends BaseGame implements MouseListener
 		//both directions on the axis for gamepad
 		
 		//gamepad actions
-		/*
-		im.associateAction(gpName,
-				net.java.games.input.Component.Identifier.Axis.Y,
-				mvBackward,
-				IInputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
-		
-		im.associateAction(gpName,
-				net.java.games.input.Component.Identifier.Axis.X,
-				mvRight,
-				IInputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
-		*/
 		im.associateAction(gpName,
 				net.java.games.input.Component.Identifier.Axis.Y,
 				stepBackward2,
@@ -157,24 +155,7 @@ public class MyGame extends BaseGame implements MouseListener
 				net.java.games.input.Component.Identifier.Axis.X,
 				stepRight2,
 				IInputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
-		/*
-		im.associateAction(gpName, 
-				net.java.games.input.Component.Identifier.Axis.RY, 
-				rotDown,
-				IInputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
-		*/
-		/*
-		im.associateAction(gpName, 
-				net.java.games.input.Component.Identifier.Axis.RX, 
-				rotRight,
-				IInputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
-		*/
-		/*
-		im.associateAction(gpName, 
-				net.java.games.input.Component.Identifier.Axis.RX, 
-				turnRight2,
-				IInputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
-		*/
+
 		//keyboard actions
 		
 		im.associateAction(kbName, 
@@ -186,42 +167,22 @@ public class MyGame extends BaseGame implements MouseListener
 				net.java.games.input.Component.Identifier.Key.Z, 
 				toggleCam,
 				IInputManager.INPUT_ACTION_TYPE.ON_PRESS_ONLY);
-		/*
-		im.associateAction(kbName, 
-				net.java.games.input.Component.Identifier.Key.W, 
-				mvForward,
-				IInputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
-		*/
+
 		im.associateAction(kbName, 
 				net.java.games.input.Component.Identifier.Key.W, 
 				stepForward1,
 				IInputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
-		/*
-		im.associateAction(kbName, 
-				net.java.games.input.Component.Identifier.Key.S, 
-				mvBackward,
-				IInputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
-		*/
+
 		im.associateAction(kbName, 
 				net.java.games.input.Component.Identifier.Key.S, 
 				stepBackward1,
 				IInputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
-		/*
-		im.associateAction(kbName, 
-				net.java.games.input.Component.Identifier.Key.D, 
-				mvRight,
-				IInputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
-		*/
+
 		im.associateAction(kbName, 
 				net.java.games.input.Component.Identifier.Key.D, 
 				stepRight1,
 				IInputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
-		/*
-		im.associateAction(kbName, 
-				net.java.games.input.Component.Identifier.Key.A, 
-				mvLeft,
-				IInputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
-		*/
+
 		
 		im.associateAction(kbName, 
 				net.java.games.input.Component.Identifier.Key.A, 
@@ -239,28 +200,6 @@ public class MyGame extends BaseGame implements MouseListener
 				rolLeft,
 				IInputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
 		
-		/*
-		im.associateAction(kbName, 
-				net.java.games.input.Component.Identifier.Key.UP, 
-				rotUp,
-				IInputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
-		
-		im.associateAction(kbName, 
-				net.java.games.input.Component.Identifier.Key.DOWN, 
-				rotDown,
-				IInputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
-		
-		im.associateAction(kbName, 
-				net.java.games.input.Component.Identifier.Key.RIGHT, 
-				rotRight,
-				IInputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
-		
-		im.associateAction(kbName, 
-				net.java.games.input.Component.Identifier.Key.LEFT, 
-				rotLeft,
-				IInputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
-		*/
-		
 	}
 
 	private void initGameObjects() {
@@ -277,6 +216,16 @@ public class MyGame extends BaseGame implements MouseListener
 		 
 		 rootNode = new Group("rootNode");
 		 
+		 Texture skyTex=TextureManager.loadTexture2D("webtreats-seamless-cloud-1.jpg");
+		 skybox = new SkyBox("SkyBox", 200.0f, 200.0f, 200.0f);
+		 skybox.setTexture(SkyBox.Face.North, skyTex);
+		 skybox.setTexture(SkyBox.Face.South, skyTex);
+		 skybox.setTexture(SkyBox.Face.East, skyTex);
+		 skybox.setTexture(SkyBox.Face.West, skyTex);
+		 skybox.setTexture(SkyBox.Face.Up, skyTex);
+		 rootNode.addChild(skybox);
+		 
+		 Texture groundTex=TextureManager.loadTexture2D("GrassGreenTexture0001.jpg");
 		 ground = new Cube("GROUND");
 		 ground.translate(0, -1, 0);
 		 ground.scale(100, 1,  100);
@@ -285,7 +234,7 @@ public class MyGame extends BaseGame implements MouseListener
 		 player1 = new Pyramid("PLAYER1");
 		 player1.translate(0, 1, 50);
 		 player1.rotate(180, new Vector3D(0, 1, 0));
-		 addGameWorldObject(player1);
+		 rootNode.addChild(player1);
 		 
 		 camera1 = new JOGLCamera(renderer);
 		 camera1.setPerspectiveFrustum(60, 2, 1, 1000);
@@ -294,7 +243,7 @@ public class MyGame extends BaseGame implements MouseListener
 		 player2 = new Cube("PLAYER2");
 		 player2.translate(50, 1, 0);
 		 player2.rotate(-90, new Vector3D(0, 1, 0));
-		 addGameWorldObject(player2);
+		 rootNode.addChild(player2);
 		 
 		 camera2 = new JOGLCamera(renderer);
 		 camera2.setPerspectiveFrustum(60, 2, 1, 1000);
@@ -326,6 +275,9 @@ public class MyGame extends BaseGame implements MouseListener
 			 plant.addController(rc1);
 			 rootNode.addChild(plant);
 		 }
+		 
+		 
+		 
 		 addGameWorldObject(rootNode);
 		 
 		 
@@ -365,11 +317,14 @@ public class MyGame extends BaseGame implements MouseListener
 
 	//update is called by BaseGame once each time around game loop
 	
-	public void update(float elapsedTimeMS)
+	protected void update(float elapsedTimeMS)
 	{
+		Point3D camLoc = camera1.getLocation();
+		Matrix3D camTranslation = new Matrix3D();
+		camTranslation.translate(camLoc.getX(), camLoc.getY(), camLoc.getZ());
+		skybox.setLocalTranslation(camTranslation);
 		
 		//collision detection
-		
 		for (SceneNode s : getGameWorld())
 		{
 			if (s instanceof MyPlant)
