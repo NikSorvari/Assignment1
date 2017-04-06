@@ -469,7 +469,9 @@ public class MyGame extends BaseGame implements MouseListener
 	
 	
 	public Vector3D getPlayerPosition() {
-		return null;
+		return new Vector3D(player1.getWorldTranslation().elementAt(0, 3),
+							player1.getWorldTranslation().elementAt(1, 3),
+							player1.getWorldTranslation().elementAt(2, 3));
 	}
 	
 	protected void render()

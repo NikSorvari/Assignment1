@@ -1,15 +1,11 @@
 import java.io.IOException;
 
-public class TestNetworkingServer {
-	public static void main(String[] args)
+public class TestNetworkingServer
+{ 
+	public static void main(String[] args) throws IOException
 	{ 
-		String number = args[1];
+		String number = args[0];
 		int arg = Integer.parseInt(number);
-		try {
-			GameServerTCP testTCPServer = new GameServerTCP(arg);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		GameServerTCP testTCPServer = new GameServerTCP(arg); 
 	}
 }

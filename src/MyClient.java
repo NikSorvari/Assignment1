@@ -87,11 +87,11 @@ public class MyClient extends GameConnectionClient
 		
 	}
 
-	private void sendCreateMessage(Object playerPosition) {
+	private void sendCreateMessage(Vector3D playerPosition) {
 		// format: (create, localId, x,y,z)
 		 try
 		 { String message = new String("create," + id.toString());
-		message += "," + ((Vector3D) playerPosition).getX()+"," + ((Vector3D) playerPosition).getY() + "," + ((Vector3D) playerPosition).getZ();
+		message += "," + playerPosition.getX()+"," + playerPosition.getY() + "," + playerPosition.getZ();
 		 sendPacket(message);
 		 }
 		 catch (IOException e) { e.printStackTrace(); }
@@ -127,19 +127,5 @@ public class MyClient extends GameConnectionClient
 		 catch (IOException e) { e.printStackTrace(); }
 	}
 	
-	public static void main(String[] args) throws IOException
-	{
-		Socket sock = new Socket(hostIP, port);
-		InputStream inStream = sock.getInputStream();
-		OutputStream outStream = sock.getOutputStream();
-		//talk to server until done
-		// simple, not general, example:
-		{ 
-			byte[] data = null;
-			inStream.read(data);
 
-			outStream.write(data);
-		}
-		sock.close();
-	}
 }

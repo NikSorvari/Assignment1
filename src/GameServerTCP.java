@@ -20,7 +20,9 @@ public class GameServerTCP extends GameConnectionServer<UUID>
 	public GameServerTCP(int arg) throws IOException {
 		
 		super(arg, ProtocolType.TCP);
+		System.out.println(this.getLocalInetAddress().toString() + " " + arg);
 		this.port = arg;
+		System.out.println(this.getLocalPort());
 	}
 
 
@@ -131,24 +133,8 @@ public class GameServerTCP extends GameConnectionServer<UUID>
 		catch (IOException e) { e.printStackTrace(); }
 		
 	}
-	public static void main(String[] args) throws IOException
-	{
-		ServerSocket serverSock = new ServerSocket(port);
-		Socket clientSock = serverSock.accept();
-		handleClient(clientSock); //talk to client until done
-		clientSock.close();
-
-		
-	}
 
 
-	private static void handleClient(Socket clientSock) throws IOException {
-		InputStream inStream = clientSock.getInputStream();
-		OutputStream outStream = clientSock.getOutputStream();
-		byte[] data = null;
-		inStream.read(data);
-		outStream.write(data);
-		
-	}
+
 
 }
