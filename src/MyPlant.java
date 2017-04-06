@@ -64,14 +64,14 @@ public class MyPlant extends TriMesh implements IEventListener
 				this.collected=true;
 			}
 		else 
-		{
+		{/*
 			if (this.getWorldBound().contains(new Point3D(MyGame.getP2().getLocalTranslation().elementAt(0, 0),
 					MyGame.getP2().getLocalTranslation().elementAt(1, 1),
 					MyGame.getP2().getLocalTranslation().elementAt(2, 2))))
 				{
 					this.setLocalTranslation(m);
 					this.collected=true;
-				}
+				}*/
 		};
 		return true;
 		

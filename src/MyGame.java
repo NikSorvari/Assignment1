@@ -1,12 +1,5 @@
 //Nik Sorvari
-//02/14/2017
-
-//todo:
-
-
-//support input actions handled by Action classes implementing IAction,
-//link device components with action classes using InputManager.associateAction()
-
+//04/05/2017
 
 
 
@@ -36,6 +29,12 @@ import sage.scene.shape.Line;
 import sage.scene.shape.Pyramid;
 import sage.scene.shape.Rectangle;
 import sage.scene.shape.Teapot;
+import sage.scene.state.RenderState.RenderStateType;
+import sage.scene.state.TextureState;
+import sage.terrain.AbstractHeightMap;
+import sage.terrain.HillHeightMap;
+import sage.terrain.ImageBasedHeightMap;
+import sage.terrain.TerrainBlock;
 import sage.texture.Texture;
 import sage.texture.TextureManager;
 import sage.scene.TriMesh;
@@ -44,9 +43,23 @@ import sage.event.EventManager;
 import sage.event.IEventManager;
 import net.java.games.input.*;
 
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import sage.networking.IGameConnection.ProtocolType;
+
 
 public class MyGame extends BaseGame implements MouseListener
 {
+	private static final int BUFSIZE = 0;
+	private String serverAddress;
+	private int serverPort;
+	private ProtocolType serverProtocol;
+	MyClient thisClient;
+	private static DatagramSocket serverSock;
+	
 	Random rn = new Random();
 	private static int score = 0;
 	private float time = 0;
@@ -55,7 +68,7 @@ public class MyGame extends BaseGame implements MouseListener
 	private IRenderer renderer;
 	IDisplaySystem display;
 	static ICamera camera1, camera2;
-	Camera3Pcontroller cc1, cc2;
+	Camera3Pcontroller cc1;
 	IEventManager eventMgr;
 	IInputManager im;
 	String gpName;
@@ -64,6 +77,7 @@ public class MyGame extends BaseGame implements MouseListener
 	
 	SkyBox skybox;
 	Cube ground;
+	TerrainBlock tb;
 	private static SceneNode player1;
 	private static SceneNode player2;
 	Pyramid aPyr;
@@ -76,16 +90,31 @@ public class MyGame extends BaseGame implements MouseListener
 	int numCrashes=0;
 	private static boolean behindAvatar=true;
 	
-	
+	public MyGame(String serverAddr, int sPort)
+	{
+		super();
+		this.serverAddress = serverAddr;
+		this.serverPort = sPort;
+		this.serverProtocol = ProtocolType.TCP;
+	}
 	//initGame() is called once at startup by BaseGame.start()
 	
 	protected void initGame()
 	{
+		try
+		 { thisClient = new MyClient(InetAddress.getByName(serverAddress),
+		 serverPort, serverProtocol, this); }
+		 catch (UnknownHostException e) { e.printStackTrace(); }
+		 catch (IOException e) { e.printStackTrace(); }
+		 
+		 if (thisClient != null) { thisClient.sendJoinMessage(); }
+		 
 		eventMgr = EventManager.getInstance();
 		display = getDisplaySystem();
 		renderer = getDisplaySystem().getRenderer();
 		im = getInputManager();
 		initGameObjects();
+		initTerrain();
 		initInputs();
 
 		//a HUD
@@ -110,12 +139,12 @@ public class MyGame extends BaseGame implements MouseListener
 
 
 	protected void initInputs() {
-		gpName = im.getFirstGamepadName();
+		//gpName = im.getFirstGamepadName();
 		kbName = im.getKeyboardName();
 		mouseName = im.getMouseName();
 		
 		cc1 = new Camera3Pcontroller(camera1, player1, im, kbName);
-		cc2 = new Camera3Pcontroller(camera2, player2, im, gpName);
+		//cc2 = new Camera3Pcontroller(camera2, player2, im, gpName);
 		
 		IAction quitGame = new QuitGameAction(this);
 		IAction toggleCam = new toggleCamType();
@@ -132,13 +161,13 @@ public class MyGame extends BaseGame implements MouseListener
 		RightRoll rolRight = new RightRoll(camera1, 0.1f);
 		LeftRoll rolLeft = new LeftRoll(camera1, 0.1f);
 		
-		MoveForwardAction stepForward1 = new MoveForwardAction(player1);
-		MoveBackwardAction stepBackward1 = new MoveBackwardAction(player1);
-		MoveRightAction stepRight1 = new MoveRightAction(player1);
-		MoveLeftAction stepLeft1 = new MoveLeftAction(player1);
+		MoveForwardAction stepForward1 = new MoveForwardAction(player1, tb);
+		MoveBackwardAction stepBackward1 = new MoveBackwardAction(player1, tb);
+		MoveRightAction stepRight1 = new MoveRightAction(player1, tb);
+		MoveLeftAction stepLeft1 = new MoveLeftAction(player1, tb);
 		
-		MoveBackwardAction stepBackward2 = new MoveBackwardAction(player2);
-		MoveRightAction stepRight2 = new MoveRightAction(player2);
+		//MoveBackwardAction stepBackward2 = new MoveBackwardAction(player2, tb);
+		//MoveRightAction stepRight2 = new MoveRightAction(player2, tb);
 		//TurnRightAction turnRight2 = new TurnRightAction(player2);
 
 		
@@ -146,6 +175,7 @@ public class MyGame extends BaseGame implements MouseListener
 		//both directions on the axis for gamepad
 		
 		//gamepad actions
+		/*
 		im.associateAction(gpName,
 				net.java.games.input.Component.Identifier.Axis.Y,
 				stepBackward2,
@@ -155,7 +185,7 @@ public class MyGame extends BaseGame implements MouseListener
 				net.java.games.input.Component.Identifier.Axis.X,
 				stepRight2,
 				IInputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
-
+		*/
 		//keyboard actions
 		
 		im.associateAction(kbName, 
@@ -202,9 +232,52 @@ public class MyGame extends BaseGame implements MouseListener
 		
 	}
 
+	 private void initTerrain()
+	 { 
+		 // create height map and terrain block
+		 
+		HillHeightMap myHillHeightMap =
+				 new HillHeightMap(129, 2000, 5.0f, 20.0f,(byte)2, 12345);
+		myHillHeightMap.setHeightScale(0.1f);
+		TerrainBlock hillTerrain = createTerBlock(myHillHeightMap);
+				
+		 // create texture and texture state to color the terrain
+		 TextureState grassState;
+		 Texture grassTexture = TextureManager.loadTexture2D("GrassGreenTexture0001.jpg");
+		 grassTexture.setApplyMode(sage.texture.Texture.ApplyMode.Replace);
+		 grassState = (TextureState)
+		display.getRenderer().createRenderState(RenderStateType.Texture);
+		 grassState.setTexture(grassTexture,0);
+		 grassState.setEnabled(true);
+		 // apply the texture to the terrain
+		 hillTerrain.setRenderState(grassState);
+		 addGameWorldObject(hillTerrain);
+	 }
+	 
+	private TerrainBlock createTerBlock(AbstractHeightMap heightMap) {
+		 float heightScale = 0.05f;
+		 Vector3D terrainScale = new Vector3D(1, heightScale, 1);
+		 // use the size of the height map as the size of the terrain
+		 int terrainSize = heightMap.getSize();
+		 // specify terrain origin so heightmap (0,0) is at world origin
+		 float cornerHeight =
+		 heightMap.getTrueHeightAtPoint(0, 0) * heightScale;
+		 Point3D terrainOrigin = new Point3D(0, -cornerHeight, 0);
+		 // create a terrain block using the height map
+		 String name = "Terrain:" + heightMap.getClass().getSimpleName();
+		 tb = new TerrainBlock(name, terrainSize, terrainScale,
+		 heightMap.getHeightData(), terrainOrigin);
+		 return tb;
+	}
+
+
+
+
+
+
+
 	private void initGameObjects() {
 		IDisplaySystem display = getDisplaySystem();
-		 display.setTitle("Space Farming 3D");
 		 /*
 		 camera1 = display.getRenderer().getCamera();
 		 camera1.setPerspectiveFrustum(45, 1, 0.01, 1000);
@@ -225,11 +298,13 @@ public class MyGame extends BaseGame implements MouseListener
 		 skybox.setTexture(SkyBox.Face.Up, skyTex);
 		 rootNode.addChild(skybox);
 		 
+		 /*
 		 Texture groundTex=TextureManager.loadTexture2D("GrassGreenTexture0001.jpg");
 		 ground = new Cube("GROUND");
 		 ground.translate(0, -1, 0);
 		 ground.scale(100, 1,  100);
 		 addGameWorldObject(ground);
+		 */
 		 
 		 player1 = new Pyramid("PLAYER1");
 		 player1.translate(0, 1, 50);
@@ -238,13 +313,13 @@ public class MyGame extends BaseGame implements MouseListener
 		 
 		 camera1 = new JOGLCamera(renderer);
 		 camera1.setPerspectiveFrustum(60, 2, 1, 1000);
-		 camera1.setViewport(0.0, 1.0, 0.0, 0.45);
-		 
+		 camera1.setViewport(0.0, 1.0, 0.0, 1.0);		 
+		 /*
 		 player2 = new Cube("PLAYER2");
 		 player2.translate(50, 1, 0);
 		 player2.rotate(-90, new Vector3D(0, 1, 0));
 		 rootNode.addChild(player2);
-		 
+		 */
 		 camera2 = new JOGLCamera(renderer);
 		 camera2.setPerspectiveFrustum(60, 2, 1, 1000);
 		 camera2.setViewport(0.0, 1.0, 0.55, 1.0);
@@ -304,6 +379,7 @@ public class MyGame extends BaseGame implements MouseListener
 		 player1ID.setColor(Color.red);
 		 player1ID.setCullMode(sage.scene.SceneNode.CULL_MODE.NEVER);
 		 camera1.addToHUD(player1ID);
+		 /*
 		 HUDString player2ID = new HUDString("Player2");
 		 player2ID.setName("Player2ID");
 		 player2ID.setLocation(0.01, .8);
@@ -311,6 +387,7 @@ public class MyGame extends BaseGame implements MouseListener
 		 player2ID.setColor(Color.yellow);
 		 player2ID.setCullMode(sage.scene.SceneNode.CULL_MODE.NEVER);
 		 camera2.addToHUD(player2ID);
+		 */
 	}
 
 
@@ -350,7 +427,7 @@ public class MyGame extends BaseGame implements MouseListener
 						
 					}
 					else
-					{
+					{/*
 						if (s.getWorldBound().contains(new Point3D(player2.getLocalTranslation().elementAt(0, 0),
 								player2.getLocalTranslation().elementAt(1, 1),
 								player2.getLocalTranslation().elementAt(2, 2)))
@@ -361,13 +438,13 @@ public class MyGame extends BaseGame implements MouseListener
 							score++;
 							CrashEvent newCrash = new CrashEvent(numCrashes);
 							eventMgr.triggerEvent(newCrash);
-						}
+						}*/
 					}
 				}
 			}
 		}
 		
-		System.out.println(player1.getWorldTranslation());
+		//System.out.println(player1.getWorldTranslation());
 		
 		//update the HUD
 		
@@ -378,18 +455,31 @@ public class MyGame extends BaseGame implements MouseListener
 		
 		//tell BaseGame to update game world state
 		cc1.update(elapsedTimeMS);
-		cc2.update(elapsedTimeMS);
+		//cc2.update(elapsedTimeMS);
 		super.update(elapsedTimeMS);
 		rootNode.updateGeometricState(time,  true);
+		
+		if (thisClient != null)
+		{
+			thisClient.processPackets();
+			thisClient.sendMoveMessage(getPlayerPosition());
+		}
+		
 	}
 	
+	
+	public Vector3D getPlayerPosition() {
+		return null;
+	}
 	
 	protected void render()
 	{
 		 renderer.setCamera(camera1);
 		 super.render();
+		 /*
 		 renderer.setCamera(camera2);
 		 super.render();
+		 */
 	}
 	
 	public static int getScore() {
@@ -407,8 +497,16 @@ public class MyGame extends BaseGame implements MouseListener
 	
 	public static void main (String [] args)
 	{
-		new MyGame().start();
+		String number = args[1];
+		int arg = Integer.parseInt(number);
+		new MyGame(args[0], arg).start();
 		
+	}
+	private void sendMessage(InetAddress addr, int port, byte [] mesg) throws IOException
+	{ 
+		DatagramPacket sendPacket = new DatagramPacket(mesg, mesg.length,
+				addr, port);
+		serverSock.send(sendPacket);
 	}
 
 	private class toggleCamType extends AbstractInputAction
@@ -429,8 +527,31 @@ public class MyGame extends BaseGame implements MouseListener
 	{
 		return player1;
 	}
+	/*
 	public static SceneNode getP2()
 	{
 		return player2;
 	}
+	*/
+	
+	public void setIsConnected(boolean b) {
+		if (!b)
+		{
+			this.serverAddress = null;
+			this.serverPort = 0;
+			this.serverProtocol = null;
+		}
+		
+	}
+	
+	protected void shutdown()
+	 {
+		 super.shutdown();
+		 if(thisClient != null)
+		 { thisClient.sendByeMessage();
+		 	try
+		 	{ thisClient.shutdown(); } // shutdown() is inherited
+		 	catch (IOException e) { e.printStackTrace(); }
+		 } 
+	 }
 }
