@@ -11,6 +11,7 @@ import java.util.Vector;
 import graphicslib3D.Matrix3D;
 import graphicslib3D.Vector3D;
 import sage.networking.client.GameConnectionClient;
+import sage.scene.SceneNode;
 
 public class MyClient extends GameConnectionClient
 {
@@ -73,18 +74,41 @@ public class MyClient extends GameConnectionClient
 		 { 
 			 UUID ghostID = UUID.fromString(msgTokens[1]);
 			 String[] ghostPosition = {msgTokens[2], msgTokens[3], msgTokens[4]};
-			 //move ghost avatars
+			 moveGhostAvatar(ghostID, ghostPosition);
 		 }
 	}
 	 
-	private void createGhostAvatar(UUID ghostID, Object ghostPosition) {
-		// TODO Auto-generated method stub
+	private void createGhostAvatar(UUID ghostID, String[] ghostPosition) {
+		
+		String[] coordX = ghostPosition[0].split(".");
+		String[] coordY = ghostPosition[1].split(".");
+		String[] coordZ = ghostPosition[2].split(".");
+		int cx = Integer.parseInt(coordX[0]);
+		int cy = Integer.parseInt(coordY[0]);
+		int cz = Integer.parseInt(coordZ[0]);
+		Vector3D ghostPos = new Vector3D(cx, cy, cz);
+		game.createGhost(ghostID, ghostPos);
+		GhostAvatar ghost = new GhostAvatar();
+		ghost.id = ghostID;
+		ghostAvatars.add(ghost);
 		
 	}
 
 	private void removeGhostAvatar(UUID ghostID) {
 		// TODO Auto-generated method stub
 		
+	}
+	
+	private void moveGhostAvatar(UUID ghostID, String[] ghostPosition) {
+		String[] coordX = ghostPosition[0].split(".");
+		String[] coordY = ghostPosition[1].split(".");
+		String[] coordZ = ghostPosition[2].split(".");
+		int cx = Integer.parseInt(coordX[0]);
+		int cy = Integer.parseInt(coordY[0]);
+		int cz = Integer.parseInt(coordZ[0]);
+		Vector3D ghostPos = new Vector3D(cx, cy, cz);
+		
+		game.moveGhostAvatar(ghostID, ghostPos);
 	}
 
 	private void sendCreateMessage(Vector3D playerPosition) {

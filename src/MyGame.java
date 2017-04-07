@@ -9,6 +9,7 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Random;
+import java.util.UUID;
 
 import graphicslib3D.Matrix3D;
 import graphicslib3D.Point3D;
@@ -49,6 +50,12 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import sage.networking.IGameConnection.ProtocolType;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineFactory;
+import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
+import java.io.*;
+import java.util.*;
 
 
 public class MyGame extends BaseGame implements MouseListener
@@ -79,12 +86,12 @@ public class MyGame extends BaseGame implements MouseListener
 	Cube ground;
 	TerrainBlock tb;
 	private static SceneNode player1;
-	private static SceneNode player2;
+	private static GhostAvatar ghost;
 	Pyramid aPyr;
 	
 	MyTruck truck;
 	private static Matrix3D trucm;
-	protected Group rootNode;
+	protected Group rootNode = new Group("rootNode");
 	MyPlant plant;
 	
 	int numCrashes=0;
@@ -287,7 +294,6 @@ public class MyGame extends BaseGame implements MouseListener
 		 camera2.setLocation(new Point3D(1, 1, 20));
 		 */
 		 
-		 rootNode = new Group("rootNode");
 		 
 		 Texture skyTex=TextureManager.loadTexture2D("webtreats-seamless-cloud-1.jpg");
 		 skybox = new SkyBox("SkyBox", 200.0f, 200.0f, 200.0f);
@@ -313,7 +319,7 @@ public class MyGame extends BaseGame implements MouseListener
 		 
 		 camera1 = new JOGLCamera(renderer);
 		 camera1.setPerspectiveFrustum(60, 2, 1, 1000);
-		 camera1.setViewport(0.0, 1.0, 0.0, 1.0);		 
+		 camera1.setViewport(0.0, 1.0, 0.0, 0.45);		 
 		 /*
 		 player2 = new Cube("PLAYER2");
 		 player2.translate(50, 1, 0);
@@ -465,6 +471,7 @@ public class MyGame extends BaseGame implements MouseListener
 			thisClient.sendMoveMessage(getPlayerPosition());
 		}
 		
+
 	}
 	
 	
@@ -503,14 +510,39 @@ public class MyGame extends BaseGame implements MouseListener
 		int arg = Integer.parseInt(number);
 		new MyGame(args[0], arg).start();
 		
+		ScriptEngineManager factory = new ScriptEngineManager();
+		
+		String scriptFileName = "hello.js";
+		
+		 List<ScriptEngineFactory> list = factory.getEngineFactories();
+		 
+		 System.out.println("Script Engine Factories found:");
+		 for (ScriptEngineFactory f : list)	 
+		 { System.out.println(" Name = " + f.getEngineName()
+		 + " language = " + f.getLanguageName()
+		 + " extensions = " + f.getExtensions());
+		 }
+		 
+		 ScriptEngine jsEngine = factory.getEngineByName("js");
+		 executeScript(jsEngine, scriptFileName);
+		
 	}
-	private void sendMessage(InetAddress addr, int port, byte [] mesg) throws IOException
-	{ 
-		DatagramPacket sendPacket = new DatagramPacket(mesg, mesg.length,
-				addr, port);
-		serverSock.send(sendPacket);
+	private static void executeScript(ScriptEngine jsEngine, String scriptFileName) {
+		try
+		 { FileReader fileReader = new FileReader(scriptFileName);
+		 engine.eval(fileReader); //execute the script statements in the file
+		 fileReader.close();
+		 }
+		 catch (FileNotFoundException e1)
+		 { System.out.println(scriptFileName + " not found " + e1); }
+		 catch (IOException e2)
+		 { System.out.println("IO problem with " + scriptFileName + e2); }
+		 catch (ScriptException e3)
+		 { System.out.println("ScriptException in " + scriptFileName + e3); }
+		 catch (NullPointerException e4)
+		 { System.out.println ("Null ptr exception in " + scriptFileName + e4); }
+		
 	}
-
 	private class toggleCamType extends AbstractInputAction
 	{
 
@@ -556,4 +588,30 @@ public class MyGame extends BaseGame implements MouseListener
 		 	catch (IOException e) { e.printStackTrace(); }
 		 } 
 	 }
+
+	public void createGhost(UUID ghostID, Vector3D ghostPos) {
+		ghost.translate((float)ghostPos.getX(), (float)ghostPos.getY(), (float)ghostPos.getZ());
+		ghost.rotate(-90, new Vector3D(0, 1, 0));
+		ghost.id = ghostID;
+		RotationController rc1 = new RotationController();
+		rc1.addControlledNode(plant);
+		plant.addController(rc1);
+		rootNode.addChild(ghost);
+		addGameWorldObject(ghost);
+		
+	}
+
+	public void moveGhostAvatar(UUID ghostID, Vector3D ghostPos) {
+		for (SceneNode s : getGameWorld())
+		{
+			if (s instanceof GhostAvatar)
+			{
+				if (((GhostAvatar) s).id == ghostID)
+				{
+					ghost.translate((float)ghostPos.getX(), (float)ghostPos.getY(), (float)ghostPos.getZ());
+				}
+			}
+		}
+		
+	}
 }
