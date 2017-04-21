@@ -19,6 +19,7 @@ import sage.camera.JOGLCamera;
 import sage.display.*;
 import sage.input.*;
 import sage.input.action.*;
+import sage.model.loader.*;
 import sage.renderer.IRenderer;
 import sage.scene.Group;
 import sage.scene.HUDString;
