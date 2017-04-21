@@ -58,7 +58,7 @@ public class Camera3Pcontroller {
 		 double r = cameraDistanceFromTarget;
 		 // calculate new camera position in Cartesian coords
 		 Point3D relativePosition = MathUtils.sphericalToCartesian(theta, phi, r);
-		 Point3D desiredCameraLoc = relativePosition.add(targetPos);
+		 Point3D desiredCameraLoc =  relativePosition.add(targetPos);
 		 cam.setLocation(desiredCameraLoc);
 	}
 	private void updateTarget() {
